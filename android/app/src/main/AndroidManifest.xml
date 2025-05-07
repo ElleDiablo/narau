@@ -1,5 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.CAMERA"/> <!-- allow camera access :contentReference[oaicite:5]{index=5} -->
+<uses-permission android:name="android.permission.INTERNET"/>
     <application
         android:label="narau"
         android:name="${applicationName}"

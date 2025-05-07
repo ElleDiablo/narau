@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:lottie/lottie.dart';
+
+// Widget build(BuildContext context) {
+//   return Center(child: Lottie.asset('assets/walking_guy.json', repeat: true));
+// }
 
 class PhotoPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+
     return Scaffold(
       backgroundColor: Colors.green.shade900,
       appBar: AppBar(
@@ -24,7 +30,6 @@ class PhotoPage extends StatelessWidget {
     );
   }
 }
-
 class TriangleWidget extends StatelessWidget {
   final Color color;
   TriangleWidget({required this.color});

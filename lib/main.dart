@@ -4,6 +4,8 @@ import 'pages/a_landing_page.dart';
 import 'pages/b_camera_page.dart';
 import 'pages/c_photo_page.dart';
 import 'pages/d_description_page.dart';
+import 'pages/home_page.dart';
+
 
 
 late List<CameraDescription> cameras;
@@ -24,6 +26,7 @@ class NarauApp extends StatelessWidget {
       initialRoute: '/',
       routes: {
               '/': (context) => LandingPage(),
+              '/home': (context) => MagePage(),
               '/camera': (context) => CameraPage(cameras: cameras),
               '/photos': (context) => PhotoPage(), // <- Add this
               '/description': (context) => DescriptionPage(), // <- Add this

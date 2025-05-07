@@ -37,6 +37,7 @@ dependencies:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
+  lottie: ^3.3.1
 
 dev_dependencies:
   flutter_test:
@@ -64,6 +65,10 @@ flutter:
     - assets/labels.txt
     - assets/mobilenet_v2_1.0_224.tflite
     - assets/images/background.png
+    - assets/images/background_2.png
+    - assets/icons/back_icon.svg
+    - assets/icons/camera_icon.svg
+    - assets/walking_guy.json
 
   # fonts:
     # - family: Roboto
@@ -90,6 +95,12 @@ flutter:
         - asset: assets/fonts/NotoSans.ttf
           weight: 400
         # - asset: assets/fonts/NotoSans-Bold.ttf
+        #   weight: 700
+    - family: Genshin
+      fonts:
+        - asset: assets/fonts/Genshin.ttf
+          weight: 400
+        # - asset: assets/fonts/Genshin-Bold.ttf
         #   weight: 700
 
 

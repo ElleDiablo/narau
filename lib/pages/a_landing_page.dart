@@ -86,7 +86,7 @@ void _addRipple(Offset position) {
                     spacing: 10,
                     children: [
                       ElevatedButton(
-                        onPressed: () => Navigator.pushNamed(context, '/'),
+                        onPressed: () => Navigator.pushNamed(context, '/home'),
                         child: Text('A'),
                       ),
                       ElevatedButton(

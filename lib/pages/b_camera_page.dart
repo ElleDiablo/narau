@@ -1,7 +1,8 @@
-import 'dart:io';
+import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
+import 'dart:io';
 
 class CameraPage extends StatefulWidget {
   final List<CameraDescription> cameras;
@@ -14,6 +15,8 @@ class CameraPage extends StatefulWidget {
 class _CameraPageState extends State<CameraPage> {
   late CameraController _controller;
   bool _initialized = false;
+  Uint8List? _annotatedImage;
+  List<Map<String, dynamic>>? _detections;
 
   @override
   void initState() {
@@ -37,7 +40,19 @@ class _CameraPageState extends State<CameraPage> {
     super.dispose();
   }
 
-  /// Capture a photo, open a TCP socket, and send the raw bytes.
+  /// Helper function to read exactly [length] bytes from the socket.
+  Future<Uint8List> _readExact(Socket socket, int length) async {
+    final buffer = BytesBuilder();
+    int remaining = length;
+    while (remaining > 0) {
+      final chunk = await socket.first;
+      buffer.add(chunk);
+      remaining -= chunk.length;
+    }
+    return buffer.toBytes();
+  }
+
+  /// Capture a photo, send it to the server, and receive the annotated image and detections.
   Future<void> _captureAndSendImage() async {
     try {
       final XFile image = await _controller.takePicture();
@@ -45,17 +60,38 @@ class _CameraPageState extends State<CameraPage> {
 
       // Connect to your TCP server (adjust IP & port)
       final socket = await Socket.connect('192.168.222.214', 3000);
-      
-      // OPTIONAL: send length prefix
+
+      // Send length prefix
       final lengthPrefix = ByteData(4)
         ..setUint32(0, imageBytes.lengthInBytes, Endian.big);
       socket.add(lengthPrefix.buffer.asUint8List());
-      
+
       // Send image data
       socket.add(imageBytes);
       await socket.flush();
+
+      // Receive annotated image
+      final annotatedImageLengthBytes = await _readExact(socket, 4);
+      final annotatedImageLength = ByteData.sublistView(annotatedImageLengthBytes).getUint32(0, Endian.big);
+      final annotatedImageBytes = await _readExact(socket, annotatedImageLength);
+
+      // Receive detections JSON
+      final detectionsLengthBytes = await _readExact(socket, 4);
+      final detectionsLength = ByteData.sublistView(detectionsLengthBytes).getUint32(0, Endian.big);
+      final detectionsBytes = await _readExact(socket, detectionsLength);
+      final detectionsJson = utf8.decode(detectionsBytes);
+      final List<Map<String, dynamic>> detections = List<Map<String, dynamic>>.from(json.decode(detectionsJson));
+
+      // Close the socket
       socket.destroy();
-      debugPrint('Image sent successfully!');
+
+      // Update the UI with the received data
+      setState(() {
+        _annotatedImage = annotatedImageBytes;
+        _detections = detections;
+      });
+
+      debugPrint('Image and detections received successfully!');
     } catch (e) {
       debugPrint('Error capturing or sending image: $e');
     }
@@ -72,7 +108,9 @@ class _CameraPageState extends State<CameraPage> {
     return Scaffold(
       body: Stack(
         children: [
-          CameraPreview(_controller),
+          _annotatedImage != null
+              ? Image.memory(_annotatedImage!)
+              : CameraPreview(_controller),
 
           // Back Button
           Positioned(
@@ -124,9 +162,30 @@ class _CameraPageState extends State<CameraPage> {
               ),
             ),
           ),
+
+          // Display detections
+          if (_detections != null)
+            Positioned(
+              top: 100,
+              left: 20,
+              right: 20,
+              child: Container(
+                color: Colors.white70,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: _detections!.map((detection) {
+                    return Text(
+                      'Class ID: ${detection['class_id']}, Score: ${detection['score'].toStringAsFixed(2)}',
+                      style: const TextStyle(fontSize: 16),
+                    );
+                  }).toList(),
+                ),
+              ),
+            ),
         ],
       ),
     );
   }
 }
+
 

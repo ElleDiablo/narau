@@ -63,6 +63,35 @@ flutter:
   assets:
     - assets/labels.txt
     - assets/mobilenet_v2_1.0_224.tflite
+    - assets/images/background.png
+
+  # fonts:
+    # - family: Roboto
+    #   fonts:
+    #     - asset: assets/fonts/Roboto-Regular.ttf
+    #     - asset: assets/fonts/Roboto-Bold.ttf
+    #       weight: 700
+
+  fonts:
+    - family: Dissfunction
+      fonts:
+        - asset: assets/fonts/Dissfunction.ttf
+          weight: 400
+        # - asset: assets/fonts/Dissfunction-Bold.ttf
+        #   weight: 700
+    - family: keifont
+      fonts:
+        - asset: assets/fonts/keifont.ttf
+          weight: 400
+        # - asset: assets/fonts/keifont-Bold.ttf
+        #   weight: 700
+    - family: NotoSans
+      fonts:
+        - asset: assets/fonts/NotoSans.ttf
+          weight: 400
+        # - asset: assets/fonts/NotoSans-Bold.ttf
+        #   weight: 700
+
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

@@ -15,6 +15,7 @@ Future<void> main() async {
 }
 
 class NarauApp extends StatelessWidget {
+  const NarauApp({super.key});
   @override
   Widget build(BuildContext context) {
     return MaterialApp(

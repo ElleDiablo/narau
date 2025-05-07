@@ -45,6 +45,20 @@ class _CameraPageState extends State<CameraPage> {
       body: Stack(
         children: [
           CameraPreview(_controller),
+
+          // Back Button
+          Positioned(
+            top: 40,
+            left: 20,
+            child: IconButton(
+              icon: Icon(Icons.arrow_back, color: const Color.fromARGB(255, 0, 0, 0), size: 30),
+              onPressed: () {
+                Navigator.pop(context); // Goes back to landing page
+              },
+            ),
+          ),
+
+          // Bottom Controls
           Align(
             alignment: Alignment.bottomCenter,
             child: Container(
@@ -62,9 +76,11 @@ class _CameraPageState extends State<CameraPage> {
               ),
             ),
           ),
+
+          // Title
           Positioned(
             top: 40,
-            left: 20,
+            left: MediaQuery.of(context).size.width * 0.5 - 50, // Centered text
             child: Text(
               'NARAU',
               style: TextStyle(

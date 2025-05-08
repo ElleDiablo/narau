@@ -40,7 +40,6 @@ class _CameraPageState extends State<CameraPage> {
     super.dispose();
   }
 
-  /// Helper function to read exactly [length] bytes from the socket.
   Future<Uint8List> _readExact(Socket socket, int length) async {
     final buffer = BytesBuilder();
     int remaining = length;
@@ -52,40 +51,39 @@ class _CameraPageState extends State<CameraPage> {
     return buffer.toBytes();
   }
 
-  /// Capture a photo, send it to the server, and receive the annotated image and detections.
   Future<void> _captureAndSendImage() async {
     try {
       final XFile image = await _controller.takePicture();
       final Uint8List imageBytes = await image.readAsBytes();
 
-      // Connect to your TCP server (adjust IP & port)
       final socket = await Socket.connect('192.168.222.214', 3000);
 
-      // Send length prefix
       final lengthPrefix = ByteData(4)
         ..setUint32(0, imageBytes.lengthInBytes, Endian.big);
       socket.add(lengthPrefix.buffer.asUint8List());
-
-      // Send image data
       socket.add(imageBytes);
       await socket.flush();
 
-      // Receive annotated image
       final annotatedImageLengthBytes = await _readExact(socket, 4);
-      final annotatedImageLength = ByteData.sublistView(annotatedImageLengthBytes).getUint32(0, Endian.big);
-      final annotatedImageBytes = await _readExact(socket, annotatedImageLength);
+      final annotatedImageLength = ByteData.sublistView(
+        annotatedImageLengthBytes,
+      ).getUint32(0, Endian.big);
+      final annotatedImageBytes = await _readExact(
+        socket,
+        annotatedImageLength,
+      );
 
-      // Receive detections JSON
       final detectionsLengthBytes = await _readExact(socket, 4);
-      final detectionsLength = ByteData.sublistView(detectionsLengthBytes).getUint32(0, Endian.big);
+      final detectionsLength = ByteData.sublistView(
+        detectionsLengthBytes,
+      ).getUint32(0, Endian.big);
       final detectionsBytes = await _readExact(socket, detectionsLength);
       final detectionsJson = utf8.decode(detectionsBytes);
-      final List<Map<String, dynamic>> detections = List<Map<String, dynamic>>.from(json.decode(detectionsJson));
+      final List<Map<String, dynamic>> detections =
+          List<Map<String, dynamic>>.from(json.decode(detectionsJson));
 
-      // Close the socket
       socket.destroy();
 
-      // Update the UI with the received data
       setState(() {
         _annotatedImage = annotatedImageBytes;
         _detections = detections;
@@ -100,92 +98,75 @@ class _CameraPageState extends State<CameraPage> {
   @override
   Widget build(BuildContext context) {
     if (!_initialized) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     return Scaffold(
       body: Stack(
         children: [
-          _annotatedImage != null
-              ? Image.memory(_annotatedImage!)
-              : CameraPreview(_controller),
-
-          // Back Button
-          Positioned(
-            top: 40,
-            left: 20,
-            child: IconButton(
-              icon: const Icon(
-                Icons.arrow_back,
-                color: Colors.black,
-                size: 30,
-              ),
-              onPressed: () => Navigator.pop(context),
+          // Background image
+          Positioned.fill(
+            child: Image.asset(
+              'assets/images/background.png',
+              fit: BoxFit.cover,
             ),
           ),
 
-          // Bottom Controls with tap handler
+          // Centered camera preview with black frame
           Align(
-            alignment: Alignment.bottomCenter,
+            alignment: Alignment.center,
             child: Container(
-              height: 80,
-              decoration: BoxDecoration(color: Colors.green.shade900),
-              child: Center(
-                child: GestureDetector(
-                  onTap: _captureAndSendImage,
-                  child: Container(
-                    width: 60,
-                    height: 60,
-                    decoration: BoxDecoration(
-                      color: Colors.yellow.shade100,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(Icons.camera_alt, size: 30),
+              width: 375,
+              height: 600,
+              decoration: BoxDecoration(
+                color: Colors.black,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child:
+                    _annotatedImage != null
+                        ? Image.memory(_annotatedImage!, fit: BoxFit.cover)
+                        : CameraPreview(_controller),
+              ),
+            ),
+          ),
+
+          // Focus square in center
+          Center(
+            child: Icon(
+              Icons.center_focus_strong,
+              color: Colors.white70,
+              size: 40,
+            ),
+          ),
+
+          // Capture button
+          Positioned(
+            bottom: 20,
+            left: 0,
+            right: 0,
+            child: Center(
+              child: GestureDetector(
+                onTap: _captureAndSendImage,
+                child: Container(
+                  width: 60,
+                  height: 60,
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.camera_alt,
+                    size: 30,
+                    color: Colors.black,
                   ),
                 ),
               ),
             ),
           ),
-
-          // Title
-          Positioned(
-            top: 40,
-            left: MediaQuery.of(context).size.width * 0.5 - 50,
-            child: const Text(
-              'NARAU',
-              style: TextStyle(
-                fontSize: 24,
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-
-          // Display detections
-          if (_detections != null)
-            Positioned(
-              top: 100,
-              left: 20,
-              right: 20,
-              child: Container(
-                color: Colors.white70,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: _detections!.map((detection) {
-                    return Text(
-                      'Class ID: ${detection['class_id']}, Score: ${detection['score'].toStringAsFixed(2)}',
-                      style: const TextStyle(fontSize: 16),
-                    );
-                  }).toList(),
-                ),
-              ),
-            ),
         ],
       ),
     );
   }
 }
-
-
